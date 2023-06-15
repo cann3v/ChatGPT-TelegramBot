@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using log4net;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -11,6 +12,7 @@ public class Bot
     private TelegramBotClient _botClient;
     private ReceiverOptions _receiverOptions;
     private CancellationTokenSource _cts;
+    private static readonly ILog log = LogManager.GetLogger(typeof(Bot));
 
     public Bot(string token)
     {
@@ -31,6 +33,8 @@ public class Bot
             receiverOptions: _receiverOptions,
             cancellationToken: _cts.Token
         );
+        var me = await _botClient.GetMeAsync();
+        log.Warn($"Start listening for @{me.Username}");
     }
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
@@ -42,9 +46,9 @@ public class Bot
             return;
 
         var chatId = message.Chat.Id;
-
-        Console.WriteLine($"Received a '{messageText}' message in chat {chatId}.");
         
+        log.Debug($"Received a '{messageText}' message in chat {chatId}.");
+
         Message sentMessage = await botClient.SendTextMessageAsync(
             chatId: chatId,
             text: "You said:\n" + messageText,
@@ -61,7 +65,7 @@ public class Bot
             _ => exception.ToString()
         };
 
-        Console.WriteLine(ErrorMessage);
+        log.Error(ErrorMessage);
         return Task.CompletedTask;
     }
 }
