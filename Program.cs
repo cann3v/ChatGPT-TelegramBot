@@ -8,25 +8,16 @@ namespace chatgpt_bot
     {
         private static readonly ILog log = LogManager.GetLogger(typeof(Program));
         
-        private static async Task Main(string[] args)
+        private static void Main(string[] args)
         {
             XmlConfigurator.Configure(new System.IO.FileInfo("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\log4net.config"));
-            
-            /*OpenAIAPI api = new OpenAIAPI(APIAuthentication.LoadFromPath());
 
-            Chat cht = new Chat(api);
-            await foreach (var res in cht.SendMessage("Hello! My name is Heisenberg."))
-            {
-                Console.Write(res);
-            }
-            Console.WriteLine();
-            await foreach (var res in cht.SendMessage("SAY MY NAME."))
-            {
-                Console.Write(res);
-            }*/
-
+            OpenAIAPI api = new OpenAIAPI(APIAuthentication.LoadFromPath());
             string token = File.ReadAllText("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\.telegrambot");
-            Bot bot = new Bot(token);
+            
+            log.Warn("All tokens load successfully.");
+            
+            Bot bot = new Bot(token, api);
             Console.ReadLine();
         }
     }
