@@ -25,7 +25,8 @@ public class Bot
         _botClient = new TelegramBotClient(token);
         _receiverOptions = new ReceiverOptions()
         {
-            AllowedUpdates = Array.Empty<UpdateType>()
+            AllowedUpdates = Array.Empty<UpdateType>(),
+            ThrowPendingUpdates = true
         };
         Start();
     }
@@ -42,6 +43,10 @@ public class Bot
         log.Warn($"Start listening for @{me.Username}");
     }
 
+    // TODO
+    // Интегрировать базу данных
+    // Сериализация объектов класса Chat 
+    // Очищать сообщения в Chat каждые 50 раз
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
@@ -105,7 +110,7 @@ public class Bot
         var ErrorMessage = exception switch
         {
             ApiRequestException apiRequestException
-                => $"Telegram API Error:\n[{apiRequestException.ErrorCode}]\n{apiRequestException.Message}",
+                => $"Telegram API Error:[{apiRequestException.ErrorCode}] - {apiRequestException.Message}",
             _ => exception.ToString()
         };
 
