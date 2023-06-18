@@ -1,5 +1,4 @@
-﻿using System.Text;
-using log4net;
+﻿using log4net;
 using OpenAI_API;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -17,6 +16,7 @@ public class Bot
     private ReceiverOptions _receiverOptions;
     private CancellationTokenSource _cts;
     private static readonly ILog log = LogManager.GetLogger(typeof(Bot));
+    private Database _db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
 
     public Bot(string token, OpenAIAPI oaitoken)
     {
@@ -72,13 +72,14 @@ public class Bot
             await foreach (var res in cht.SendMessage(messageText))
             {
                 resp += res;
-                botClient.EditMessageTextAsync(
+                await botClient.EditMessageTextAsync(
                     chatId: chatId,
                     messageId: sentMessage.MessageId,
-                    text: resp);
+                    text: resp,
+                    cancellationToken: cancellationToken);
                 await Task.Delay(500);
             }
-            log.Debug($"Responde from ChatGPT: {resp}");
+            log.Debug($"Response from ChatGPT: {resp}");
         }
     }
 
@@ -92,6 +93,7 @@ public class Bot
                     chatId: update.Message.Chat.Id,
                     text: "Hello!",
                     cancellationToken: cancellationToken);
+                _db.InsertData(update.Message.From.Id, update.Message.From.Username);
                 break;
             case "/clear":
                 break;

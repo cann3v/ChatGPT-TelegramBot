@@ -16,6 +16,10 @@ namespace chatgpt_bot
             string token = File.ReadAllText("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\.telegrambot");
             
             log.Warn("All tokens load successfully.");
+
+            Database db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
+            db.CreateDatabaseFile();
+            db.CreateTable();
             
             Bot bot = new Bot(token, api);
             Console.ReadLine();
