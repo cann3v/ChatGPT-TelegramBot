@@ -19,7 +19,7 @@ namespace chatgpt_bot
 
             Database db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
             db.CreateDatabaseFile();
-            db.CreateTable();
+            db.CreateTables();
             
             Bot bot = new Bot(token, api);
             Console.ReadLine();
