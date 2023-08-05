@@ -41,7 +41,7 @@ public class Chat
     {
         List<string> user = chatHistory[0];
         List<string> ai = chatHistory[1];
-        
+
         if (user.Count != ai.Count)
             Log.Warn($"user.Count({user.Count}) != ai.Count({ai.Count})");
 

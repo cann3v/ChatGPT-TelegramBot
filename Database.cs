@@ -123,4 +123,19 @@ public class Database
         Log.Debug($"Database connection state: {_connection.State}");
         return chatData;
     }
+
+    public async Task ClearChats(long userId)
+    {
+        _connection.Open();
+        Log.Debug($"Database connection state: {_connection.State}");
+        string deleteDataQuery = "DELETE FROM Chats WHERE User_id = @User_id";
+        await using (SQLiteCommand deleteDataCommand = new SQLiteCommand(deleteDataQuery, _connection))
+        {
+            deleteDataCommand.Parameters.AddWithValue("@User_id", userId);
+            int rows = await deleteDataCommand.ExecuteNonQueryAsync();
+            Log.Debug($"Chat was deleted for user {userId} ({rows} rows affected)");
+        }
+        _connection.Close();
+        Log.Debug($"Database connection state: {_connection.State}");
+    }
 }

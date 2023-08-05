@@ -17,6 +17,7 @@ public class Bot
     private CancellationTokenSource _cts;
     private static readonly ILog Log = LogManager.GetLogger(typeof(Bot));
     private Database _db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
+    private static readonly int _maxMessages = 50;
 
     public Bot(string token, OpenAIAPI oaitoken)
     {
@@ -44,7 +45,6 @@ public class Bot
     }
 
     // TODO
-    // Очищать сообщения в Chat каждые 50 раз
     // Разобраться с задержкой при редактировании собщения
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
@@ -152,15 +152,27 @@ public class Bot
         return JsonSerializer.Serialize(data);
     }
 
-    private List<List<string>>? Deserialize(string json)
+    private List<List<string>>? Deserialize(string? json)
     {
         return JsonSerializer.Deserialize<List<List<string>>>(json);
     }
 
     private async Task SaveChat(long userId, List<List<string>> chat)
     {
+        if (chat[0].Count != chat[1].Count)
+        {
+            Log.Warn($"User inputs != ai outputs. Clearing chat history");
+            await _db.ClearChats(userId);
+            return;
+        }
+
+        while (chat[0].Count >= _maxMessages)
+        {
+            Log.Debug($"User {userId} has more than {_maxMessages} messages");
+            chat[0].RemoveAt(0);
+            chat[1].RemoveAt(0);
+        }
         string serializedChat = Serialize(chat);
-        Log.Debug($"Serialized chat: {serializedChat}");
         await _db.InsertChats(userId, serializedChat);
     }
 
