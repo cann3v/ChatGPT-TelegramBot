@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using log4net;
 using OpenAI_API;
 using Telegram.Bot;
@@ -18,6 +19,7 @@ public class Bot
     private static readonly ILog Log = LogManager.GetLogger(typeof(Bot));
     private Database _db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
     private static readonly int _maxMessages = 50;
+    private Random _random = new Random();
 
     public Bot(string token, OpenAIAPI oaitoken)
     {
@@ -68,7 +70,7 @@ public class Bot
         CancellationToken cancellationToken)
     {
         Chat cht = new Chat(_oaitoken);
-        string resp = "";
+        string resp = string.Empty;
         List<List<string>>? chatHistory;
         
         try
@@ -85,16 +87,27 @@ public class Bot
             chatId: update.Message.Chat.Id,
             text: "[ChatGPT]: ",
             cancellationToken: cancellationToken);
+        Stopwatch stopwatch = new Stopwatch();
+        stopwatch.Start();
         await foreach (var res in cht.SendMessage(update.Message.Text))
         {
             resp += res;
-            await botClient.EditMessageTextAsync(
-                chatId: update.Message.Chat.Id,
-                messageId: sentMessage.MessageId,
-                text: resp,
-                cancellationToken: cancellationToken);
-            //await Task.Delay(500);
+
+            if (stopwatch.ElapsedMilliseconds >= _random.Next(1000, 2001))
+            {
+                await botClient.EditMessageTextAsync(
+                    chatId: update.Message.Chat.Id,
+                    messageId: sentMessage.MessageId,
+                    text: resp,
+                    cancellationToken: cancellationToken);
+                stopwatch.Restart();
+            }
         }
+        await botClient.EditMessageTextAsync(
+            chatId: update.Message.Chat.Id,
+            messageId: sentMessage.MessageId,
+            text: resp,
+            cancellationToken: cancellationToken);
 
         if (chatHistory.Count != 0)
         {
