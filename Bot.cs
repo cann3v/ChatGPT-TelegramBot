@@ -123,6 +123,11 @@ public class Bot
                 await _db.InsertUsers(update.Message.From.Id, update.Message.From.Username);
                 break;
             case "/clear":
+                await _db.ClearChats(update.Message.From.Id);
+                await botClient.SendTextMessageAsync(
+                    chatId: update.Message.Chat.Id,
+                    text: "Message history cleared!",
+                    cancellationToken: cancellationToken);
                 break;
             default:
                 await botClient.SendTextMessageAsync(
