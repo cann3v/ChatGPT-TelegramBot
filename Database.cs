@@ -88,7 +88,7 @@ public class Database
                 insertDataCommand.Parameters.AddWithValue("@User_id", userId);
                 insertDataCommand.Parameters.AddWithValue("@Data", data);
                 int rows = await insertDataCommand.ExecuteNonQueryAsync();
-                Log.Debug($"New chat created for user {userId} ({rows} rows affected)");
+                Log.Info($"New chat created for user {userId} ({rows} rows affected)");
             }
         }
         else
@@ -99,7 +99,7 @@ public class Database
                 updateDataCommand.Parameters.AddWithValue("@Data", data);
                 updateDataCommand.Parameters.AddWithValue("@User_id", userId);
                 int rows = await updateDataCommand.ExecuteNonQueryAsync();
-                Log.Debug($"Chat was updated for user {userId} ({rows} rows affected)");
+                Log.Info($"Chat was updated for user {userId} ({rows} rows affected)");
             }
         }
         _connection.Close();

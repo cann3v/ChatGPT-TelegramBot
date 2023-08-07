@@ -1,6 +1,8 @@
 ﻿using OpenAI_API;
 using OpenAI_API.Chat;
 using log4net;
+using SharpToken;
+using Model = OpenAI_API.Models.Model;
 
 namespace chatgpt_bot;
 
@@ -10,16 +12,42 @@ public class Chat
     private OpenAIAPI _api;
     private Conversation _chat;
     private static readonly ILog Log = LogManager.GetLogger(typeof(Chat));
-    
+    private int _maxTokens = 4096;
+    private string _userInput;
+    private int _messageTokens;
+
     public Chat(OpenAIAPI api)
     {
         _api = api;
-        CreateConversation();
     }
 
+    public string UserInput
+    {
+        get => _userInput;
+        set => _userInput = value;
+    }
+
+    public int MaxTokens
+    {
+        get => _maxTokens;
+        set => _maxTokens = value;
+    }
+    
     public void CreateConversation()
     {
-        _chat = _api.Chat.CreateConversation();
+        CalculateTokens();
+        _chat = _api.Chat.CreateConversation(new ChatRequest()
+        {
+            Model = Model.ChatGPTTurbo,
+            MaxTokens = _maxTokens - _messageTokens
+        });
+    }
+
+    private void CalculateTokens()
+    {
+        var encoding = GptEncoding.GetEncoding("cl100k_base");
+        var encoded = encoding.Encode(_userInput);
+        _messageTokens = encoded.Count;
     }
 
     public async IAsyncEnumerable<string> SendMessage(string userInput)
@@ -29,6 +57,7 @@ public class Chat
         {
             yield return res;
         }
+        Log.Debug(_chat.MostResentAPIResult);
     }
 
     public void AppendChatHistory(List<List<string>> chatHistory)

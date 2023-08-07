@@ -20,6 +20,7 @@ public class Bot
     private Database _db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
     private static readonly int _maxMessages = 50;
     private Random _random = new Random();
+    private const double DefaultMaxTokens = 3500;
 
     public Bot(string token, OpenAIAPI oaitoken)
     {
@@ -45,9 +46,7 @@ public class Bot
         var me = await _botClient.GetMeAsync();
         Log.Warn($"Start listening for @{me.Username}");
     }
-
-    // TODO
-    // Разобраться с задержкой при редактировании собщения
+    
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
@@ -56,20 +55,46 @@ public class Bot
         if (message.Text is not { } messageText)
             return;
 
-        var chatId = message.Chat.Id;
-        
-        Log.Debug($"Received a '{messageText}' message in chat {chatId}.");
+        Log.Debug($"Received '{messageText}' from {update.Message.From.Username} ({update.Message.From.Id})");
 
         if (messageText.StartsWith("/"))
             await HandleCommand(botClient, update, cancellationToken);
         else
             await HandleMessage(botClient, update, cancellationToken);
     }
-    
+
     private async Task HandleMessage(ITelegramBotClient botClient, Update update,
         CancellationToken cancellationToken)
     {
+        Message sentMessage = await botClient.SendTextMessageAsync(
+            chatId: update.Message.Chat.Id,
+            text: "[ChatGPT]: ",
+            cancellationToken: cancellationToken);
+
+        double maxTokens = DefaultMaxTokens;
+        while (true)
+        {
+            try
+            {
+                await GenerateResponse(botClient, update, cancellationToken, sentMessage.MessageId, (int)maxTokens);
+                break;
+            }
+            catch (HttpRequestException)
+            {
+                maxTokens *= 0.9;
+                Log.Info($"Caught HttpRequestException. Reducing maximum number of tokens to {(int)maxTokens}. " +
+                          $"User: {update.Message.From.Id}({update.Message.From.Username})");
+            }
+        }
+    }
+
+    private async Task GenerateResponse(ITelegramBotClient botClient, Update update,
+        CancellationToken cancellationToken, int msgId, int maxTokens)
+    {
         Chat cht = new Chat(_oaitoken);
+        cht.UserInput = update.Message.Text;
+        cht.MaxTokens = maxTokens;
+        cht.CreateConversation();
         string resp = string.Empty;
         List<List<string>>? chatHistory;
         
@@ -82,11 +107,7 @@ public class Bot
         {
             chatHistory = new List<List<string>>();
         }
-
-        Message sentMessage = await botClient.SendTextMessageAsync(
-            chatId: update.Message.Chat.Id,
-            text: "[ChatGPT]: ",
-            cancellationToken: cancellationToken);
+        
         Stopwatch stopwatch = new Stopwatch();
         stopwatch.Start();
         await foreach (var res in cht.SendMessage(update.Message.Text))
@@ -97,7 +118,7 @@ public class Bot
             {
                 await botClient.EditMessageTextAsync(
                     chatId: update.Message.Chat.Id,
-                    messageId: sentMessage.MessageId,
+                    messageId: msgId,
                     text: resp,
                     cancellationToken: cancellationToken);
                 stopwatch.Restart();
@@ -105,10 +126,10 @@ public class Bot
         }
         await botClient.EditMessageTextAsync(
             chatId: update.Message.Chat.Id,
-            messageId: sentMessage.MessageId,
+            messageId: msgId,
             text: resp,
             cancellationToken: cancellationToken);
-
+        
         if (chatHistory.Count != 0)
         {
             chatHistory[0].Add(update.Message.Text);
