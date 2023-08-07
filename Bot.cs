@@ -163,6 +163,15 @@ public class Bot
                     text: "Message history cleared!",
                     cancellationToken: cancellationToken);
                 break;
+            case "/about":
+                string strAbout =
+                    "A Telegram bot with fully open-source code, written in C#, " +
+                    "allowing communication with gpt-3.5-turbo. Creator: @cannev.";
+                await botClient.SendTextMessageAsync(
+                    chatId: update.Message.Chat.Id,
+                    text: strAbout,
+                    cancellationToken: cancellationToken);
+                break;
             default:
                 await botClient.SendTextMessageAsync(
                     chatId: update.Message.Chat.Id,
