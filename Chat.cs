@@ -57,7 +57,6 @@ public class Chat
         {
             yield return res;
         }
-        Log.Debug(_chat.MostResentAPIResult);
     }
 
     public void AppendChatHistory(List<List<string>> chatHistory)
