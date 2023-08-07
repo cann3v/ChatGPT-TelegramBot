@@ -10,14 +10,14 @@ namespace chatgpt_bot
         
         private static void Main(string[] args)
         {
-            XmlConfigurator.Configure(new System.IO.FileInfo("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\log4net.config"));
+            XmlConfigurator.Configure(new System.IO.FileInfo("{PATH TO log4net.config}"));
 
             OpenAIAPI api = new OpenAIAPI(APIAuthentication.LoadFromPath());
-            string token = File.ReadAllText("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\.telegrambot");
+            string token = File.ReadAllText("{PATH TO TELEGRAM BOT TOKEN FILE}");
             
             log.Warn("All tokens load successfully.");
 
-            Database db = new Database("R:\\Roman\\aaa\\csharp\\chatgpt-bot\\users.db");
+            Database db = new Database("{PATH TO DATABASE}");
             db.CreateDatabaseFile();
             db.CreateTables();
             
